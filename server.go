@@ -11,33 +11,59 @@ import (
 func main() {
 	r := mux.NewRouter()
 	//Handle root / default route
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<title>Home Page</title>
-			</head>
-			<body>
-				<h1>Welcome to My Website</h1>
-				<p>This is the homepage.</p>
-				<img src="https://miro.medium.com/v2/resize:fit:640/format:webp/1*xPtnbPkaUN10nFXcPZP0nw.jpeg" alt="Deskripsi Gambar" width="300">
-			</body>
-			</html>
-		`))
-	})
+	r.HandleFunc("/", HomeHandler)
 
-	r.HandleFunc("/about", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("About"))
-	})
+	r.HandleFunc("/about", AboutHandler)
 
 	r.HandleFunc("/search", SearchHandler).Methods("GET")
+	r.HandleFunc("/login", LoginPageHandler).Methods("GET")
+	r.HandleFunc("/login", LoginHandler).Methods("POST")
+	r.HandleFunc("/dashboard", DashboardHandler) //tidak pakai .methods karena sudah pasti GET saja untuk sekarang
 
 	http.Handle("/", r)
 	fmt.Println("Server Ready")
 	http.ListenAndServe(":8989", nil)
 
+}
+
+func AboutHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("About"))
+}
+
+// Menampilkan halaman login menggunakan ServeFile
+func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "static/login.html")
+}
+
+func DashboardHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "static/dashboard.html")
+}
+
+// Handle form login
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Metode tidak diizinkan", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Ambil username & password dari form
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	// Dummy login check (nanti bisa diganti dengan database)
+	// if username == "admin" && password == "password123" {
+	// 	fmt.Fprintf(w, "Login berhasil! Selamat datang, %s", username)
+	// } else {
+	// 	http.Error(w, "Username atau password salah", http.StatusUnauthorized)
+	// }
+	if username == "admin" && password == "password123" {
+		http.Redirect(w, r, "/dashboard", http.StatusFound) //redirect url web
+	}
+}
+
+func HomeHandler(w http.ResponseWriter, r *http.Request) {
+	// w.Write([]byte("Hello, World!"))
+	http.ServeFile(w, r, "static/index.html")
 }
 
 func SearchHandler(w http.ResponseWriter, r *http.Request) {
