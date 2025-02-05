@@ -12,7 +12,20 @@ func main() {
 	r := mux.NewRouter()
 	//Handle root / default route
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, World!"))
+		w.Write([]byte(`<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<title>Home Page</title>
+			</head>
+			<body>
+				<h1>Welcome to My Website</h1>
+				<p>This is the homepage.</p>
+				<img src="https://miro.medium.com/v2/resize:fit:640/format:webp/1*xPtnbPkaUN10nFXcPZP0nw.jpeg" alt="Deskripsi Gambar" width="300">
+			</body>
+			</html>
+		`))
 	})
 
 	r.HandleFunc("/about", func(w http.ResponseWriter, r *http.Request) {
