@@ -1,14 +1,26 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
+)
+
+const (
+	host     = "localhost"
+	port     = "5432"
+	user     = "telkomdev"
+	password = "admin"
+	dbname   = "postgres"
 )
 
 func main() {
+
 	r := mux.NewRouter()
 	//Handle root / default route
 	r.HandleFunc("/", HomeHandler)
@@ -41,6 +53,14 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handle form login
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	connStr := "host=" + host + " port=" + port + " user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Metode tidak diizinkan", http.StatusMethodNotAllowed)
 		return
@@ -56,7 +76,19 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// } else {
 	// 	http.Error(w, "Username atau password salah", http.StatusUnauthorized)
 	// }
-	if username == "admin" && password == "password123" {
+
+	var dbUsername, dbPassword string
+	err = db.QueryRow("select username, password from users where username = $1", username).Scan(&dbUsername, &dbPassword)
+	if err != nil {
+		log.Print("Error querying database : ", err)
+		http.Error(w, "Authentikasi Gagal", http.StatusUnauthorized)
+	}
+
+	if password != dbPassword {
+		http.Error(w, "Kata Sandi Salah", http.StatusUnauthorized)
+	}
+
+	if username == "user" && password == "admin" {
 		http.Redirect(w, r, "/dashboard", http.StatusFound) //redirect url web
 	}
 }
